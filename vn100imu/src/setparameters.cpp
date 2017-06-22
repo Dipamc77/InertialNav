@@ -15,7 +15,7 @@ setparameters::~setparameters()
     delete paramui;
 }
 
-void setparameters::on_setparameters_rejected()
+void setparameters::on_setparameters_destroyed()
 {
     paramWindowOpen = false;
 }

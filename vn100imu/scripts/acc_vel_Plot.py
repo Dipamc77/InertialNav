@@ -18,7 +18,7 @@ class Plot(QtGui.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         rospy.init_node('plot')
-        self.subacc = rospy.Subscriber('/vn100imu/acceleration_filtered',xyz_data,self.accelerationCallback)
+        self.subacc = rospy.Subscriber('/vn100imu/acceleration_data',xyz_data,self.accelerationCallback)
         self.subvel = rospy.Subscriber('/vn100imu/velocity_data',xyz_data,self.velocityCallback)
         rospy.Subscriber('/vn100imu/sendtarecommand',Bool,self.tareCallback)
         self.startTimeNow = rospy.get_rostime()

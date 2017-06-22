@@ -17,7 +17,7 @@ public:
     Ui::setparameters *paramui;
 private slots:
     void on_valueset1_textEdited(const QString &arg1);
-    void on_setparameters_rejected();
+    void on_setparameters_destroyed();
   //  void on_slider1_valuechanged(int value);
     void on_slider1_sliderMoved(int value);
     void on_slider2_sliderMoved(int value);

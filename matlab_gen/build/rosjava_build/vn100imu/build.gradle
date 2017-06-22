@@ -1,0 +1,14 @@
+/*
+ * Copyright 2015 The MathWorks, Inc.
+ */
+
+try {
+    project.catkin.tree.generateMessageArtifact(project, 'vn100imu')
+} catch (NullPointerException e) {
+    println("Couldn't find vn100imu on the ROS_PACKAGE_PATH")
+}
+
+task bugfixtask << {
+    mkdir sourceSets.main.output.classesDir
+}
+jar.dependsOn(bugfixtask)

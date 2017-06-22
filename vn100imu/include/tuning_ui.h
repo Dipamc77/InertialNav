@@ -3,6 +3,14 @@
 
 #include <QMainWindow>
 #include "setparameters.h"
+#include <ros/ros.h>
+#include "std_msgs/String.h"
+#include <QGraphicsScene>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/imgproc/imgproc.hpp>
+
+using namespace cv;
 
 namespace Ui {
 class tuning_ui;
@@ -13,9 +21,10 @@ class tuning_ui : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit tuning_ui(QWidget *parent = 0);
+    explicit tuning_ui(ros::NodeHandle _nh,QWidget *parent = 0);
     ~tuning_ui();
     void ui_update();
+    void imagehandler(const sensor_msgs::ImageConstPtr& msg);
 
 private slots:
     void on_chk_camopen_toggled(bool checked);
@@ -56,9 +65,22 @@ private slots:
 
     void on_chk_iirlpf_toggled(bool checked);
 
+    void on_tuning_ui_destroyed();
+
+public:
+  QImage Q_temp;
+  QGraphicsScene *scene1;
+  QImage::Format imgformat;
+  Mat camImg;
+
 private:
     Ui::tuning_ui *ui;
     setparameters *paramWindow;
+
+    //ros::Subscriber uisub;
+    ros::Publisher  uipub;
+    std_msgs::String uimsg;
+    image_transport::Subscriber ui_imagesub;
 };
 
 #endif // TUNING_UI_H

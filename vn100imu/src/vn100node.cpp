@@ -11,6 +11,7 @@
 #include<vn100imu/ypr_data.h>
 #include<vn100imu/YPR.h>
 #include "std_msgs/Bool.h"
+#include "std_msgs/String.h"
 //#include<cmath>
 
 //Publishers
@@ -30,17 +31,20 @@ float sampletime,period;
 ros::Time prevtime;
 ros::Duration sampletimediff,nextsampletimediff;
 bool readSuccess = false;
+bool usevn100flag_fromui = false;
 
 void publish_device()
 {
+	if(!usevn100flag_fromui)
+		return;
 	static int seq=0;
 	seq++;
 	VN_ERROR_CODE vn_error;
 	std::string vn_err_msg;
 	ros::Time timestamp;
 	timestamp=ros::Time::now();
-	//vn_error=vn100_getYawPitchRollTrueTrueAccelerationAngularRate(&vnsens,&YPR,&TrueAccel,&Gyro);
-	vn_error=vn100_getYawPitchRollTrueInertialAccelerationAngularRate(&vnsens,&YPR,&TrueAccel,&Gyro);
+	vn_error=vn100_getYawPitchRollTrueBodyAccelerationAngularRate(&vnsens,&YPR,&TrueAccel,&Gyro);
+	//vn_error=vn100_getYawPitchRollTrueInertialAccelerationAngularRate(&vnsens,&YPR,&TrueAccel,&Gyro);
 	sampletimediff = ros::Time::now()-timestamp;
 	sampletime = (sampletimediff.toSec())*1e3;  // print this
   nextsampletimediff = timestamp - prevtime;
@@ -124,6 +128,14 @@ void publish_timer(const ros::TimerEvent&)
 {
 	publish_device();
 }
+void uimessagehandler(const std_msgs::String::ConstPtr& uimessage)
+{
+	std::string message = uimessage->data;
+	if(message.compare("VN100 Publish On") == 0)
+		usevn100flag_fromui = true;
+	else if (message.compare("VN100 Publsih Off") == 0)
+		usevn100flag_fromui = false;
+}
 //Function defining possible errors in using vectornav ins
 void vnerror_msg(VN_ERROR_CODE vn_error,std::string &msg)
 {
@@ -185,7 +197,7 @@ int main(int argc,char** argv)
 	pubacc_data  =np.advertise<vn100imu::xyz_data> ("/vn100imu/acceleration_data",1);//Initializing
   pubdelv_data =np.advertise<vn100imu::xyz_data> ("/vn100imu/deltavelocity",1);
 	ros::Subscriber sub = n.subscribe<std_msgs::Bool>("/vn100imu/sendtarecommand", 1, tareCallback);
-
+	ros::Subscriber subui = n.subscribe<std_msgs::String>("/tuning_ui/uimessages",1,uimessagehandler);
 	VN_ERROR_CODE vn_err;         //dealing with vectornav errors
 	std::string vn_error_msg;
 	ROS_INFO("connecting to vnsens. port: %s at a baudrate:%d\n",

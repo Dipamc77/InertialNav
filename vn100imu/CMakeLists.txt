@@ -131,6 +131,9 @@ target_link_libraries(dataplotter2d ${catkin_LIBRARIES})
 add_executable(plotoverlay src/overlay.cpp)
 target_link_libraries(plotoverlay ${catkin_LIBRARIES})
 
+add_executable(acceldcm src/ins_dcm.cpp)
+target_link_libraries(acceldcm ${catkin_LIBRARIES})
+
 add_library(uituninglib ${QT_SOURCES} ${QT_FORMS_HPP} ${QT_MOC_HPP})
 target_link_libraries(uituninglib ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
