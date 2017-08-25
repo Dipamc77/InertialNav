@@ -28,20 +28,35 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 ################################################
 file(GLOB QT_FORMS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
 			   ui/tuning_ui.ui
-			   ui/setparameters.ui)
+			   ui/setparameters.ui
+			   )
 set(QT_MOC include/tuning_ui.h 
 	   include/setparameters.h
-	   include/graphicsviewmouse.h)
+	   include/graphicsviewmouse.h
+	)
 SET(QT_SOURCES src/tuning_ui_main.cpp
 	       src/tuning_ui.cpp
 	       src/graphicsviewmouse.cpp
-	       src/setparameters.cpp)
+	       src/setparameters.cpp
+	       )
+
+file(GLOB QT_FORMS_2 RELATIVE  ${CMAKE_CURRENT_SOURCE_DIR} 
+			      ui/botcontrol.ui)
+
+set(QT_MOC_2 include/botcontrol.h)
+
+set(QT_SOURCES_2 src/botcontrol_main.cpp
+		 src/botcontrol.cpp)
+
 
 ################################################
 ## Setup QT
 ################################################
 QT4_WRAP_UI(QT_FORMS_HPP ${QT_FORMS})
 QT4_WRAP_CPP(QT_MOC_HPP ${QT_MOC})
+
+QT4_WRAP_UI(QT_FORMS_HPP_2 ${QT_FORMS_2})
+QT4_WRAP_CPP(QT_MOC_HPP_2 ${QT_MOC_2})
 
 
 ## Generate messages in the 'msg' folder
@@ -51,19 +66,6 @@ QT4_WRAP_CPP(QT_MOC_HPP ${QT_MOC})
    xyz_data.msg
    coord.msg
  )
-
-# Generate services in the 'srv' folder
- add_service_files(
-   FILES
-   YPR.srv
- )
-
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
 
 # Generate added messages and services with any dependencies listed here
  generate_messages(
@@ -140,4 +142,9 @@ target_link_libraries(uituninglib ${QT_LIBRARIES} ${catkin_LIBRARIES})
 add_executable(uituning src/tuning_ui_main.cpp)
 target_link_libraries(uituning uituninglib)
 
+add_library(uibotcontrollib ${QT_SOURCES_2} ${QT_FORMS_HPP_2} ${QT_MOC_HPP_2})
+target_link_libraries(uibotcontrollib ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(uibotcontrol src/botcontrol_main.cpp)
+target_link_libraries(uibotcontrol uibotcontrollib)
 

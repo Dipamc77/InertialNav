@@ -1,4 +1,8 @@
 #include<iostream>
+
+using namespace std;
+
+
 //#include<unistd.h>
 //#include<math.h>
 //#include<stdlib.h>
@@ -9,7 +13,7 @@
 //adding message type headers
 #include<vn100imu/xyz_data.h>
 #include<vn100imu/ypr_data.h>
-#include<vn100imu/YPR.h>
+//#include<vn100imu/YPR.h>
 #include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 //#include<cmath>
@@ -26,12 +30,19 @@
 //printing the asynchronous data;
 VnVector3 TrueAccel;
 VnVector3 Gyro;
+VnVector3 Magneticval;
 VnYpr YPR;
 float sampletime,period;
 ros::Time prevtime;
 ros::Duration sampletimediff,nextsampletimediff;
 bool readSuccess = false;
 bool usevn100flag_fromui = false;
+
+Vn100CompositeData asyncdata;
+
+/*void AsyncListener(Vn100* sender, Vn100CompositeData* data) {
+  //asyncdata = *data;
+}*/
 
 void publish_device()
 {
@@ -43,7 +54,11 @@ void publish_device()
 	std::string vn_err_msg;
 	ros::Time timestamp;
 	timestamp=ros::Time::now();
-	vn_error=vn100_getYawPitchRollTrueBodyAccelerationAngularRate(&vnsens,&YPR,&TrueAccel,&Gyro);
+	vn_error = vn100_getCurrentAsyncData(&vnsens, &asyncdata);
+	YPR = asyncdata.ypr;
+	TrueAccel = asyncdata.acceleration;
+	//vn_error=vn100_getYawPitchRoll(&vnsens,&YPR);
+	//vn_error=vn100_getYawPitchRollTrueBodyAccelerationAngularRate(&vnsens,&YPR,&TrueAccel,&Gyro);
 	//vn_error=vn100_getYawPitchRollTrueInertialAccelerationAngularRate(&vnsens,&YPR,&TrueAccel,&Gyro);
 	sampletimediff = ros::Time::now()-timestamp;
 	sampletime = (sampletimediff.toSec())*1e3;  // print this
@@ -53,7 +68,7 @@ void publish_device()
 	if(vn_error!=VNERR_NO_ERROR)
 	{
 		vnerror_msg(vn_error,vn_err_msg);
-		ROS_INFO("error in reading the sensor data:%s",vn_err_msg.c_str());
+		ROS_INFO("Error in reading the sensor data:%s",vn_err_msg.c_str());
 		readSuccess = false;
 		return;
 	}
@@ -131,10 +146,13 @@ void publish_timer(const ros::TimerEvent&)
 void uimessagehandler(const std_msgs::String::ConstPtr& uimessage)
 {
 	std::string message = uimessage->data;
-	if(message.compare("VN100 Publish On") == 0)
+	/*if(message.compare("VN100 Publish On") == 0)
 		usevn100flag_fromui = true;
 	else if (message.compare("VN100 Publsih Off") == 0)
 		usevn100flag_fromui = false;
+	*/
+	if(message.compare("TARE") == 0)
+		vn100_tare(&vnsens,1);
 }
 //Function defining possible errors in using vectornav ins
 void vnerror_msg(VN_ERROR_CODE vn_error,std::string &msg)
@@ -183,9 +201,9 @@ int main(int argc,char** argv)
 	std::string port;
 	int baudrate,publish_rate,async_output_rate,async_output_type;
 	std::string enable,headingMode,filteringMode,tuningMode;
-	np.param<std::string>("serial_port",port,"/dev/ttyUSB0");
+	np.param<std::string>("serial_port",port,"/dev/auv_vn100");
 	np.param<int>("serial_baud",baudrate,115200);
-	np.param<int>("publish_rate",publish_rate,10);
+	np.param<int>("publish_rate",publish_rate,50);
 	//np.param<int>("async_output_type",async_output_type,0);
 	//np.param<int>("async_output_rate",async_output_rate,100);//assigning params to variables
   np.param<std::string>("VPE_enable",enable,"1");
@@ -197,7 +215,8 @@ int main(int argc,char** argv)
 	pubacc_data  =np.advertise<vn100imu::xyz_data> ("/vn100imu/acceleration_data",1);//Initializing
   pubdelv_data =np.advertise<vn100imu::xyz_data> ("/vn100imu/deltavelocity",1);
 	ros::Subscriber sub = n.subscribe<std_msgs::Bool>("/vn100imu/sendtarecommand", 1, tareCallback);
-	ros::Subscriber subui = n.subscribe<std_msgs::String>("/tuning_ui/uimessages",1,uimessagehandler);
+	//ros::Subscriber subui = n.subscribe<std_msgs::String>("/tuning_ui/uimessages",1,uimessagehandler);
+	ros::Subscriber subui = n.subscribe<std_msgs::String>("/botcontrol/uimessages",1,uimessagehandler);
 	VN_ERROR_CODE vn_err;         //dealing with vectornav errors
 	std::string vn_error_msg;
 	ROS_INFO("connecting to vnsens. port: %s at a baudrate:%d\n",
@@ -214,7 +233,36 @@ int main(int argc,char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	//enable vpe funtion
+	/*vn_err = vn100_registerAsyncDataReceivedListener(&vnsens, &AsyncListener);
+	if(vn_err!=VNERR_NO_ERROR)    //in case of any error
+	{
+		vnerror_msg(vn_err,vn_error_msg);
+		ROS_FATAL("Async Listener not set: %s",
+	          vn_error_msg.c_str()
+		);
+		exit(EXIT_FAILURE);
+	}*/
+
+	vn_err = vn100_setAsynchronousDataOutputType(&vnsens,VNASYNC_VNYBA,1);
+	if(vn_err!=VNERR_NO_ERROR)    //in case of any error
+	{
+		vnerror_msg(vn_err,vn_error_msg);
+		ROS_FATAL("Output datatype not set: %s",
+	          vn_error_msg.c_str()
+		);
+		exit(EXIT_FAILURE);
+	}
+	vn_err = vn100_setAsynchronousDataOutputFrequency(&vnsens,50,1);
+	if(vn_err!=VNERR_NO_ERROR)    //in case of any error
+	{
+		vnerror_msg(vn_err,vn_error_msg);
+		ROS_FATAL("Output frequency not set: %s",
+	          vn_error_msg.c_str()
+		);
+		exit(EXIT_FAILURE);
+	}
+
+			//enable vpe funtion
 
 	int trialCount = 10;
 	vn_err = vn100_getVpeControl(&vnsens,(unsigned char*) enable.c_str(),(unsigned char*) headingMode.c_str(),(unsigned char*)filteringMode.c_str(),(unsigned char*) tuningMode.c_str());
@@ -238,6 +286,7 @@ int main(int argc,char** argv)
 	ros::Timer pub_timer;
 	ROS_INFO("publishing at %d Hz\n",publish_rate);
 	pub_timer=np.createTimer(ros::Duration(1.0/(double)publish_rate),publish_timer);
+	usevn100flag_fromui = true;
 	ros::spin();
 	vn100_disconnect(&vnsens);
 	return 0;

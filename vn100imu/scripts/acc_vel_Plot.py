@@ -46,7 +46,7 @@ class Plot(QtGui.QMainWindow):
         self._timer.timeout.connect(self.play)
         # play function will plot all the graphs
         # keeping in same thread as callback was causing problems
-        self._timer.start(50)
+        self._timer.start(200)
         #other widgets have names plotArea12, plotArea21 and plotArea22
 
 
