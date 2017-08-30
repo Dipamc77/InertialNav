@@ -33,6 +33,7 @@ float dist = 0.0;
 int val = 0;
 
 bool movementflag = 0,lrbflag = 0;
+int currentpwm = 200;
 
 void setup() {
   toothgap = pi*wheel_diameter/ticksper_rev; // in cm
@@ -47,8 +48,8 @@ void setup() {
   pinMode(2,INPUT); 
   pinMode(3,INPUT);
 
-  analogWrite(lpwm,200);
-  analogWrite(rpwm,200);
+  analogWrite(lpwm,currentpwm);
+  analogWrite(rpwm,currentpwm-10);
 
    attachInterrupt(1, rightEncoder, RISING); 
    attachInterrupt(0, leftEncoder, RISING); 
@@ -83,8 +84,9 @@ void loop() {
     //   Serial.println(s);
         if(c == 'p')
         {
-          analogWrite(rpwm,val);
           analogWrite(lpwm,val);
+          analogWrite(rpwm,val-10);
+          currentpwm = val;
           val = 0;
         }
         else
@@ -147,19 +149,29 @@ void forward()
   digitalWrite(lb,LOW);
   digitalWrite(rb,LOW);*/
 }
-void turnleft()
+void turnright()
 {
+  analogWrite(lpwm,50);
+  analogWrite(rpwm,50);
   PORTD &= 0x0F;
   PORTD |= 0b01100000;
   lrbflag = 1;
   movementflag = 0;
+  
+  //analogWrite(lpwm,currentpwm);
+  //analogWrite(rpwm,currentpwm);
 }
-void turnright()
+void turnleft()
 {
+  analogWrite(lpwm,50);
+  analogWrite(rpwm,50);
   PORTD &= 0x0F;
   PORTD |= 0b10010000;
   lrbflag = 1;
   movementflag = 0;
+  
+  //analogWrite(lpwm,currentpwm);
+  //analogWrite(rpwm,currentpwm);
 }
 void backward()
 {
@@ -177,6 +189,8 @@ void stop_bot()
   PORTD |= 0xF0;
   movementflag = 0;
   lrbflag = 0;
+  analogWrite(lpwm,currentpwm);
+  analogWrite(rpwm,currentpwm-10);
 /*  digitalWrite(lf,HIGH);
   digitalWrite(rf,HIGH);
   digitalWrite(lb,HIGH);
