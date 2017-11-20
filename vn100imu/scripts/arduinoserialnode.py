@@ -69,12 +69,14 @@ def main():
     prevtime = rospy.Time.now()
     while not rospy.is_shutdown():
         inp = ser.readline()
+
         if inp!="":
             #print inp
             timediffvals = inp.split(",")
             timediffleft = float(timediffvals[0])
             timediffright = float(timediffvals[1])
             movementflag = float(timediffvals[2]);
+            pwmval = float(timediffvals[3])
             if timediffleft != 0:
                 velleft = 17.2e4/timediffleft/32.0
             else:
@@ -85,7 +87,7 @@ def main():
                 velright = 0.0
             velmsg.XYZ.x = velleft
             velmsg.XYZ.y = velright
-            velmsg.XYZ.z = movementflag
+            velmsg.XYZ.z = movementflag*1000+pwmval
             velpub.publish(velmsg)
             timenow = rospy.Time.now()
             perDur = timenow - prevtime

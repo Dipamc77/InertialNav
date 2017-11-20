@@ -49,7 +49,7 @@ void setup() {
   pinMode(3,INPUT);
 
   analogWrite(lpwm,currentpwm);
-  analogWrite(rpwm,currentpwm-10);
+  analogWrite(rpwm,currentpwm);
 
    attachInterrupt(1, rightEncoder, RISING); 
    attachInterrupt(0, leftEncoder, RISING); 
@@ -103,7 +103,7 @@ void loop() {
     if(printtimediff>=20000)
     {
         lastprinttime = micros();
-        Serial.println(String(timediff_left) + "," + String(timediff_right) + "," + String(movementflag)); 
+        Serial.println(String(timediff_left) + "," + String(timediff_right) + "," + String(movementflag) + "," + String(currentpwm)); 
     }
    if(tick_right)
    {
@@ -190,7 +190,7 @@ void stop_bot()
   movementflag = 0;
   lrbflag = 0;
   analogWrite(lpwm,currentpwm);
-  analogWrite(rpwm,currentpwm-10);
+  analogWrite(rpwm,currentpwm);
 /*  digitalWrite(lf,HIGH);
   digitalWrite(rf,HIGH);
   digitalWrite(lb,HIGH);
